@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
 ---
 
-<Layout title="Welcome to Astro.">
+<Layout title="Cotizacion sonymat">
 	<h1>Cotizaciones sonymat</h1>
 	<main>
 		<form action="" id="cotizationData">
@@ -13,6 +13,10 @@ import Card from '../components/Card.astro';
 					# de cotización
 					<input type="number" id="nCotization" name="nCotization" />
 				</label>
+				<label for="dateCotization">
+					Fecha de cotización
+					<input type="date" id="dateCotization" name="dateCotization" />
+				</label>
 				<label for="nameCompany">
 					Nombre de la empresa
 					<input type="text" id="nameCompany" name="nameCompany" />
@@ -21,25 +25,25 @@ import Card from '../components/Card.astro';
 					RUC de la empresa
 					<input type="text" id="rucCompany" name="rucCompany" />
 				</label>
-				<label for="dateCotization">
-					Fecha de cotización
-					<input type="date" id="dateCotization" name="dateCotization" />
-				</label>
-				<label for="dateValidCotization">
+				<!-- <label for="dateValidCotization">
 					Cotización válida hasta
 					<input
 						type="date"
 						id="dateValidCotization"
 						name="dateValidCotization"
 					/>
-				</label>
+				</label> -->
 				<label for="nameClient">
-					Nombre del cliente
+					Contacto del cliente
 					<input type="text" id="nameClient" name="nameClient" />
 				</label>
-				<label for="rucClient">
-					RUC del cliente
-					<input type="text" id="rucClient" name="rucClient" />
+				<label for="directionClient">
+					Dirección del cliente
+					<input type="text" id="directionClient" name="directionClient" />
+				</label>
+				<label for="asunto">
+					Asunto
+					<input type="text" id="asunto" name="asunto" />
 				</label>
 				<label for="itemDescription1">
 					Descripción del item #1
@@ -129,31 +133,129 @@ import Card from '../components/Card.astro';
 
 	const doc = new jsPDF();
 
+	// # # # # # # # #  PDF BASE # # # # # # # #
 	// Empezamos creando el pdf
 	doc.setFontSize(32);
-	doc.text('Cotización #', 10, 20);
-	doc.setFontSize(20);
-	doc.text('Sonymat', 10, 30);
-	doc.text('RUC: 123456789', 10, 40);
-	doc.text('Fecha: 2021-09-01', 200, 30, { align: 'right' });
-	doc.text('Válido hasta: 2021-09-30', 200, 40, { align: 'right' });
-	doc.text('Cliente: Cliente de prueba', 200, 50, { align: 'right' });
-	doc.text('RUC: 123456789', 200, 60, { align: 'right' });
-	doc.table(
+	doc.setFont('helvetica', 'bold');
+	doc.text('Sonymat', 10, 20);
+	// Datos de Sonymat
+	doc.setFontSize(12);
+	doc.text('RUC:', 172, 15, { align: 'right' });
+	doc.setFont('helvetica', 'normal');
+	doc.text('10158643095', 200, 15, { align: 'right' });
+
+	doc.setFont('helvetica', 'bold');
+	doc.text('Cell:', 152, 20, { align: 'right' });
+	doc.setFont('helvetica', 'normal');
+	doc.text('933156539 | 998085837', 200, 20, { align: 'right' });
+
+	// Señores, Ruc, Contacto, Fecha, Dirección, Asunto
+	doc.setFont('helvetica', 'bold');
+	doc.text('Fecha', 10, 30);
+	doc.text(': ', 32, 30);
+
+	doc.text('Señores', 10, 35);
+	doc.text(': ', 32, 35);
+
+	doc.text('RUC', 10, 40);
+	doc.text(': ', 32, 40);
+
+	doc.text('Contacto', 10, 45);
+	doc.text(': ', 32, 45);
+
+	doc.text('Dirección', 10, 50);
+	doc.text(': ', 32, 50);
+
+	doc.text('Asunto', 10, 55);
+	doc.text(': ', 32, 55);
+
+	// Texto de presentación
+	doc.setFont('helvetica', 'normal');
+	doc.text('De nuestra consideración', 10, 70);
+	doc.text(
+		'En atención a su amable solicitud, tenemos el agrado de presentarle nuestra propuesta\ntécnico - económica de lo siguiente:',
 		10,
-		80,
-		[
-			{ n: '5', d: 'Productos', p: '10 S/.' },
-			{ n: '5', d: 'Productos', p: '10 S/.' },
-			{ n: '5', d: 'Productos', p: '10 S/.' },
-		],
-		['n', 'd', 'p'],
-		{ autoSize: true },
+		75,
 	);
-	doc.setFontSize(20);
-	doc.text('Subtotal: 25 S/.', 200, 220, { align: 'right' });
-	doc.text('IGV: 5 S/.', 200, 210, { align: 'right' });
-	doc.text('Total: 30 S/.', 200, 200, { align: 'right' });
+
+	// Tabla de productos
+	// doc.setLineDashPattern(); // Regresa a la línea sólida por defecto, pero no me gusta como marca el IDE el error
+	doc.setLineWidth(0.5);
+	doc.setFont('helvetica', 'bold');
+	// Celdas headers
+	doc.cell(10, 85, 16, 10, 'Item', 1, 'center');
+	doc.cell(26, 85, 18, 10, 'Cant.', 1, 'center');
+	doc.cell(50, 85, 110, 10, 'Descripción del producto o servicio', 1, 'center');
+	doc.cell(130, 85, 30, 10, 'Precio (c/u)', 1, 'center');
+	doc.cell(162, 85, 20, 10, 'Total', 1, 'center');
+
+	// Celdas de prueba
+	doc.setFont('helvetica', 'normal');
+	// Celda 1
+	doc.cell(10, 10, 16, 20, '1', 2, 'center');
+	doc.cell(26, 85, 18, 20, '2', 2, 'center');
+	doc.cell(50, 85, 110, 20, 'Descripción del producto o servicio', 2, 'center');
+	doc.cell(130, 85, 30, 20, '500', 2, 'center');
+	doc.cell(162, 85, 20, 20, '100000', 2, 'center');
+	doc.cell(10, 85, 16, 20, '2', 3, 'center');
+	// Celda 2
+	doc.cell(26, 85, 18, 20, '3', 3, 'center');
+	doc.cell(52, 85, 110, 20, 'Descripción del producto o servicio', 3, 'center');
+	doc.cell(132, 85, 30, 20, '25', 3, 'center');
+	doc.cell(164, 85, 20, 20, '75', 3, 'center');
+	// Celda 3
+	doc.cell(10, 85, 16, 20, '3', 5, 'center');
+	doc.cell(26, 85, 18, 20, '3', 5, 'center');
+	doc.cell(52, 85, 110, 20, 'Descripción del producto o servicio', 5, 'center');
+	doc.cell(132, 85, 30, 20, '25', 5, 'center');
+	doc.cell(164, 85, 20, 20, '75', 5, 'center');
+	// Celda 4
+	doc.cell(10, 85, 16, 20, '4', 6, 'center');
+	doc.cell(26, 85, 18, 20, '3', 6, 'center');
+	doc.cell(52, 85, 110, 20, 'Descripción del producto o servicio', 6, 'center');
+	doc.cell(132, 85, 30, 20, '25', 6, 'center');
+	doc.cell(164, 85, 20, 20, '75', 6, 'center');
+	// Celda 5
+	doc.cell(10, 85, 16, 20, '5', 7, 'center');
+	doc.cell(26, 85, 18, 20, '3', 7, 'center');
+	doc.cell(52, 85, 110, 20, 'Descripción del producto o servicio', 7, 'center');
+	doc.cell(132, 85, 30, 20, '25', 7, 'center');
+	doc.cell(164, 85, 20, 20, '75', 7, 'center');
+
+	// Sub Total
+	doc.setFont('helvetica', 'bold');
+	doc.cell(142, 205, 32, 8, 'Sub Total:', 1, 'center');
+	doc.setFont('helvetica', 'normal');
+	doc.cell(164, 205, 30, 8, '25 S/.', 1, 'center');
+	// IGV
+	doc.setFont('helvetica', 'bold');
+	doc.cell(142, 215, 32, 8, 'IGV:', 2, 'right');
+	doc.setFont('helvetica', 'normal');
+	doc.cell(164, 215, 30, 8, '5 S/.', 2, 'right');
+	// Total
+	doc.setFont('helvetica', 'bold');
+	doc.cell(142, 225, 32, 8, 'Total:', 3, 'left');
+	doc.setFont('helvetica', 'normal');
+	doc.cell(164, 225, 30, 8, '30 S/.', 3, 'left');
+
+	// Observaciones
+	doc.setFont('helvetica', 'bold');
+	doc.text('Condiciones de la oferta:', 10, 230);
+	doc.setFont('helvetica', 'normal');
+	doc.text(
+		`1. Los precios son en moneda nacional y no incluyen IGV.\n2. La validez de la oferta es de 30 días calendario.\n3. La forma de pago es 50 % de adelanto y 50 % antes de la entrega.\n4. La entrega de los productos es de 15 días calendario de emitida la orden de compra.`,
+		10,
+		235,
+	);
+
+	// Línea de separación
+	// Al final para que no afecte a la tabla
+	doc.setLineWidth(0.1);
+	doc.setDrawColor(0, 0, 0);
+	doc.setLineDashPattern([2.5], 1);
+	doc.line(10, 65, 200, 65);
+
+	// # # # # # # # #  PDF BASE # # # # # # # #
 
 	const pdfLocalSrc = doc.output('bloburl');
 
@@ -173,91 +275,274 @@ import Card from '../components/Card.astro';
 			console.log('Actualizando pdf');
 
 			const newDoc = new jsPDF();
+			// # # # # # # # #  PDF BASE # # # # # # # #
+			// Empezamos creando el pdf
 			newDoc.setFontSize(32);
-			newDoc.text(`Cotización # ${formData.nCotization as string}`, 10, 20);
-			newDoc.setFontSize(20);
-			newDoc.text(`${formData.nameCompany}`, 10, 30);
-			newDoc.text(`RUC: ${formData.rucCompany}`, 10, 40);
-			newDoc.text(`Fecha: ${formData.dateCotization}`, 200, 30, {
-				align: 'right',
-			});
-			newDoc.text(`Válido hasta: ${formData.dateValidCotization}`, 200, 40, {
-				align: 'right',
-			});
-			newDoc.text(`Cliente: ${formData.nameClient}`, 200, 50, {
-				align: 'right',
-			});
-			newDoc.text(`RUC: ${formData.rucClient}`, 200, 60, { align: 'right' });
-			const tableData = [
-				{
-					Descripción:
-						formData.itemDescription1 !== ''
-							? (formData.itemDescription1 as string)
-							: ' ',
-					Cantidad:
-						formData.itemAmount1 !== ''
-							? (formData.itemAmount1 as string)
-							: ' ',
-					Precio: `${formData.itemPrice1} S/.`,
-				},
-				{
-					Descripción:
-						formData.itemDescription2 !== ''
-							? (formData.itemDescription2 as string)
-							: ' ',
-					Cantidad:
-						formData.itemAmount2 !== ''
-							? (formData.itemAmount2 as string)
-							: ' ',
-					Precio: `${formData.itemPrice2} S/.`,
-				},
-				{
-					Descripción:
-						formData.itemDescription3 !== ''
-							? (formData.itemDescription3 as string)
-							: ' ',
-					Cantidad:
-						formData.itemAmount3 !== ''
-							? (formData.itemAmount3 as string)
-							: ' ',
-					Precio: `${formData.itemPrice3} S/.`,
-				},
-				{
-					Descripción:
-						formData.itemDescription4 !== ''
-							? (formData.itemDescription4 as string)
-							: ' ',
-					Cantidad:
-						formData.itemAmount4 !== ''
-							? (formData.itemAmount4 as string)
-							: ' ',
-					Precio: `${formData.itemPrice4} S/.`,
-				},
-				{
-					Descripción:
-						formData.itemDescription5 !== ''
-							? (formData.itemDescription5 as string)
-							: ' ',
-					Cantidad:
-						formData.itemAmount5 !== ''
-							? (formData.itemAmount5 as string)
-							: ' ',
-					Precio: `${formData.itemPrice5} S/.`,
-				},
-			];
-			newDoc.table(10, 80, tableData, ['Descripción', 'Cantidad', 'Precio'], {
-				autoSize: true,
-			});
-			newDoc.setFontSize(20);
-			newDoc.text(`Subtotal: ${formData.subtotal} S/.`, 200, 200, {
-				align: 'right',
-			});
-			newDoc.text(`IGV: ${formData.igv} S/.`, 200, 210, {
-				align: 'right',
-			});
-			newDoc.text(`Total: ${formData.total} S/.`, 200, 220, {
-				align: 'right',
-			});
+			newDoc.setFont('helvetica', 'bold');
+			newDoc.text('Sonymat', 10, 20);
+			// Datos de Sonymat
+			newDoc.setFontSize(12);
+			newDoc.text('RUC:', 172, 15, { align: 'right' });
+			newDoc.setFont('helvetica', 'normal');
+			newDoc.text('10158643095', 200, 15, { align: 'right' });
+
+			newDoc.setFont('helvetica', 'bold');
+			newDoc.text('Cell:', 152, 20, { align: 'right' });
+			newDoc.setFont('helvetica', 'normal');
+			newDoc.text('933156539 | 998085837', 200, 20, { align: 'right' });
+
+			// Señores, Ruc, Contacto, Fecha, Dirección, Asunto
+			newDoc.setFont('helvetica', 'bold');
+			newDoc.text('Fecha', 10, 30);
+			newDoc.text(': ', 32, 30);
+			newDoc.setFont('helvetica', 'normal');
+			newDoc.text(`${formData.dateCotization}`, 34, 30);
+
+			newDoc.setFont('helvetica', 'bold');
+			newDoc.text('Señores', 10, 35);
+			newDoc.text(': ', 32, 35);
+			newDoc.setFont('helvetica', 'normal');
+			newDoc.text(`${formData.nameCompany}`, 34, 35);
+
+			newDoc.setFont('helvetica', 'bold');
+			newDoc.text('RUC', 10, 40);
+			newDoc.text(': ', 32, 40);
+			newDoc.setFont('helvetica', 'normal');
+			newDoc.text(`${formData.rucCompany}`, 34, 40);
+
+			newDoc.setFont('helvetica', 'bold');
+			newDoc.text('Contacto', 10, 45);
+			newDoc.text(': ', 32, 45);
+			newDoc.setFont('helvetica', 'normal');
+			newDoc.text(`${formData.nameClient}`, 34, 45);
+
+			newDoc.setFont('helvetica', 'bold');
+			newDoc.text('Dirección', 10, 50);
+			newDoc.text(': ', 32, 50);
+			newDoc.setFont('helvetica', 'normal');
+			newDoc.text(`${formData.directionClient}`, 34, 50);
+
+			newDoc.setFont('helvetica', 'bold');
+			newDoc.text('Asunto', 10, 55);
+			newDoc.text(': ', 32, 55);
+			newDoc.setFont('helvetica', 'normal');
+			newDoc.text(`${formData.asunto}`, 34, 55);
+
+			// Texto de presentación
+			newDoc.setFont('helvetica', 'normal');
+			newDoc.text('De nuestra consideración', 10, 70);
+			newDoc.text(
+				'En atención a su amable solicitud, tenemos el agrado de presentarle nuestra propuesta\ntécnico - económica de lo siguiente:',
+				10,
+				75,
+			);
+
+			// Tabla de productos
+			// newDoc.setLineDashPattern(); // Regresa a la línea sólida por defecto, pero no me gusta como marca el IDE el error
+			newDoc.setLineWidth(0.5);
+			newDoc.setFont('helvetica', 'bold');
+			// Celdas headers
+			newDoc.cell(10, 85, 16, 10, 'Item', 1, 'center');
+			newDoc.cell(26, 85, 18, 10, 'Cant.', 1, 'center');
+			newDoc.cell(
+				50,
+				85,
+				108,
+				10,
+				'Descripción del producto o servicio',
+				1,
+				'center',
+			);
+			newDoc.cell(130, 85, 30, 10, 'Precio (c/u)', 1, 'center');
+			newDoc.cell(162, 85, 22, 10, 'Total', 1, 'center');
+
+			// Celdas de prueba
+			newDoc.setFont('helvetica', 'normal');
+			// Celda 1
+			newDoc.cell(10, 10, 16, 20, '1', 2, 'center'); // Item 1
+			newDoc.cell(
+				26,
+				85,
+				18,
+				20,
+				`${formData.itemAmount1 ? formData.itemAmount1 : '0'}`,
+				2,
+				'center',
+			); // Cantidad 1
+			newDoc.cell(
+				50,
+				85,
+				108,
+				20,
+				`${formData.itemDescription1 ? formData.itemDescription1 : '-'}`,
+				2,
+				'center',
+			); // Descripción 1
+			newDoc.cell(130, 85, 30, 20, `${formData.itemPrice1} S/.`, 2, 'center'); // Precio unitario 1
+			newDoc.cell(
+				162,
+				85,
+				22,
+				20,
+				`${parseFloat(formData.itemAmount1 ? (formData.itemAmount1 as string) : '0') * parseFloat(formData.itemPrice1 ? (formData.itemPrice1 as string) : '0')} S/.`,
+				2,
+				'center',
+			); // Total 1
+			// Celda 2
+			newDoc.cell(10, 85, 16, 20, '2', 3, 'center'); // Item 2
+			newDoc.cell(
+				26,
+				85,
+				18,
+				20,
+				`${formData.itemAmount2 ? formData.itemAmount2 : '0'}`,
+				3,
+				'center',
+			); // Cantidad 2
+			newDoc.cell(
+				52,
+				85,
+				108,
+				20,
+				`${formData.itemDescription2 ? formData.itemDescription2 : '-'}`,
+				3,
+				'center',
+			); // Descripción 2
+			newDoc.cell(132, 85, 30, 20, `${formData.itemPrice2} S/.`, 3, 'center'); // Precio unitario 2
+			newDoc.cell(
+				164,
+				85,
+				22,
+				20,
+				`${parseFloat(formData.itemAmount2 ? (formData.itemAmount2 as string) : '0') * parseFloat(formData.itemPrice2 ? (formData.itemPrice2 as string) : '0')} S/.`,
+				3,
+				'center',
+			); // Total 2
+			// Celda 3
+			newDoc.cell(10, 85, 16, 20, '3', 5, 'center'); // Item 3
+			newDoc.cell(
+				26,
+				85,
+				18,
+				20,
+				`${formData.itemAmount3 ? formData.itemAmount3 : '0'}`,
+				5,
+				'center',
+			); // Cantidad 3
+			newDoc.cell(
+				52,
+				85,
+				108,
+				20,
+				`${formData.itemDescription3 ? formData.itemDescription3 : '-'}`,
+				5,
+				'center',
+			); // Descripción 3
+			newDoc.cell(132, 85, 30, 20, `${formData.itemPrice3} S/.`, 5, 'center'); // Precio unitario 3
+			newDoc.cell(
+				164,
+				85,
+				22,
+				20,
+				`${parseFloat(formData.itemAmount3 ? (formData.itemAmount3 as string) : '0') * parseFloat(formData.itemPrice3 ? (formData.itemPrice3 as string) : '0')} S/.`,
+				5,
+				'center',
+			); // Total 3
+			// Celda 4
+			newDoc.cell(10, 85, 16, 20, '4', 6, 'center'); // Item 4
+			newDoc.cell(
+				26,
+				85,
+				18,
+				20,
+				`${formData.itemAmount4 ? formData.itemAmount4 : '0'}`,
+				6,
+				'center',
+			); // Cantidad 4
+			newDoc.cell(
+				52,
+				85,
+				108,
+				20,
+				`${formData.itemDescription4 ? formData.itemDescription4 : '-'}`,
+				6,
+				'center',
+			); // Descripción 4
+			newDoc.cell(132, 85, 30, 20, `${formData.itemPrice4} S/.`, 6, 'center'); // Precio unitario 4
+			newDoc.cell(
+				164,
+				85,
+				22,
+				20,
+				`${parseFloat(formData.itemAmount4 ? (formData.itemAmount4 as string) : '0') * parseFloat(formData.itemPrice4 ? (formData.itemPrice4 as string) : '0')} S/.`,
+				6,
+				'center',
+			); // Total 4
+			// Celda 5
+			newDoc.cell(10, 85, 16, 20, '5', 7, 'center'); // Item 5
+			newDoc.cell(
+				26,
+				85,
+				18,
+				20,
+				`${formData.itemAmount5 ? formData.itemAmount5 : '0'}`,
+				7,
+				'center',
+			); // Cantidad 5
+			newDoc.cell(
+				52,
+				85,
+				108,
+				20,
+				`${formData.itemDescription5 ? formData.itemDescription5 : '-'}`,
+				7,
+				'center',
+			); // Descripción 5
+			newDoc.cell(132, 85, 30, 20, `${formData.itemPrice5} S/.`, 7, 'center'); // Precio unitario 5
+			newDoc.cell(
+				164,
+				85,
+				22,
+				20,
+				`${parseFloat(formData.itemAmount4 ? (formData.itemAmount5 as string) : '0') * parseFloat(formData.itemPrice4 ? (formData.itemPrice5 as string) : '0')} S/.`,
+				7,
+				'center',
+			); // Total 5
+
+			// Sub Total
+			newDoc.setFont('helvetica', 'bold');
+			newDoc.cell(142, 205, 32, 8, 'Sub Total:', 1, 'center');
+			newDoc.setFont('helvetica', 'normal');
+			newDoc.cell(164, 205, 30, 8, `${formData.subtotal} S/.`, 1, 'center');
+			// IGV
+			newDoc.setFont('helvetica', 'bold');
+			newDoc.cell(142, 215, 32, 8, 'IGV:', 2, 'right');
+			newDoc.setFont('helvetica', 'normal');
+			newDoc.cell(164, 215, 30, 8, `${formData.igv} S/.`, 2, 'right');
+			// Total
+			newDoc.setFont('helvetica', 'bold');
+			newDoc.cell(142, 225, 32, 8, 'Total:', 3, 'left');
+			newDoc.setFont('helvetica', 'normal');
+			newDoc.cell(164, 225, 30, 8, `${formData.total} S/.`, 3, 'left');
+
+			// Observaciones
+			newDoc.setFont('helvetica', 'bold');
+			newDoc.text('Condiciones de la oferta:', 10, 230);
+			newDoc.setFont('helvetica', 'normal');
+			newDoc.text(
+				`1. Los precios son en moneda nacional y no incluyen IGV.\n2. La validez de la oferta es de 30 días calendario.\n3. La forma de pago es 50 % de adelanto y 50 % antes de la entrega.\n4. La entrega de los productos es de 15 días calendario de emitida la orden de compra.`,
+				10,
+				235,
+			);
+
+			// Línea de separación
+			// Al final para que no afecte a la tabla
+			newDoc.setLineWidth(0.1);
+			newDoc.setDrawColor(0, 0, 0);
+			newDoc.setLineDashPattern([2.5], 1);
+			newDoc.line(10, 65, 200, 65);
+
+			// # # # # # # # #  PDF BASE # # # # # # # #
 
 			const newpdfLocalSrc = newDoc.output('bloburl');
 			pdfViewer.title = `Cotización#${formData.nCotization as string}`;
@@ -270,7 +555,326 @@ import Card from '../components/Card.astro';
 			new FormData(formCotization as HTMLFormElement),
 		);
 		console.log('Descargando cotización ', formData.nCotization);
-		doc.save(`cotizacion#${formData.nCotization}.pdf`);
+
+		const docToDownload = new jsPDF();
+		// # # # # # # # #  PDF BASE # # # # # # # #
+		// Empezamos creando el pdf
+		docToDownload.setFontSize(32);
+		docToDownload.setFont('helvetica', 'bold');
+		docToDownload.text('Sonymat', 10, 20);
+		// Datos de Sonymat
+		docToDownload.setFontSize(12);
+		docToDownload.text('RUC:', 172, 15, { align: 'right' });
+		docToDownload.setFont('helvetica', 'normal');
+		docToDownload.text('10158643095', 200, 15, { align: 'right' });
+
+		docToDownload.setFont('helvetica', 'bold');
+		docToDownload.text('Cell:', 152, 20, { align: 'right' });
+		docToDownload.setFont('helvetica', 'normal');
+		docToDownload.text('933156539 | 998085837', 200, 20, { align: 'right' });
+
+		// Señores, Ruc, Contacto, Fecha, Dirección, Asunto
+		docToDownload.setFont('helvetica', 'bold');
+		docToDownload.text('Fecha', 10, 30);
+		docToDownload.text(': ', 32, 30);
+		docToDownload.setFont('helvetica', 'normal');
+		docToDownload.text(`${formData.dateCotization}`, 34, 30);
+
+		docToDownload.setFont('helvetica', 'bold');
+		docToDownload.text('Señores', 10, 35);
+		docToDownload.text(': ', 32, 35);
+		docToDownload.setFont('helvetica', 'normal');
+		docToDownload.text(`${formData.nameCompany}`, 34, 35);
+
+		docToDownload.setFont('helvetica', 'bold');
+		docToDownload.text('RUC', 10, 40);
+		docToDownload.text(': ', 32, 40);
+		docToDownload.setFont('helvetica', 'normal');
+		docToDownload.text(`${formData.rucCompany}`, 34, 40);
+
+		docToDownload.setFont('helvetica', 'bold');
+		docToDownload.text('Contacto', 10, 45);
+		docToDownload.text(': ', 32, 45);
+		docToDownload.setFont('helvetica', 'normal');
+		docToDownload.text(`${formData.nameClient}`, 34, 45);
+
+		docToDownload.setFont('helvetica', 'bold');
+		docToDownload.text('Dirección', 10, 50);
+		docToDownload.text(': ', 32, 50);
+		docToDownload.setFont('helvetica', 'normal');
+		docToDownload.text(`${formData.directionClient}`, 34, 50);
+
+		docToDownload.setFont('helvetica', 'bold');
+		docToDownload.text('Asunto', 10, 55);
+		docToDownload.text(': ', 32, 55);
+		docToDownload.setFont('helvetica', 'normal');
+		docToDownload.text(`${formData.asunto}`, 34, 55);
+
+		// Texto de presentación
+		docToDownload.setFont('helvetica', 'normal');
+		docToDownload.text('De nuestra consideración', 10, 70);
+		docToDownload.text(
+			'En atención a su amable solicitud, tenemos el agrado de presentarle nuestra propuesta\ntécnico - económica de lo siguiente:',
+			10,
+			75,
+		);
+
+		// Tabla de productos
+		// docToDownload.setLineDashPattern(); // Regresa a la línea sólida por defecto, pero no me gusta como marca el IDE el error
+		docToDownload.setLineWidth(0.5);
+		docToDownload.setFont('helvetica', 'bold');
+		// Celdas headers
+		docToDownload.cell(10, 85, 16, 10, 'Item', 1, 'center');
+		docToDownload.cell(26, 85, 18, 10, 'Cant.', 1, 'center');
+		docToDownload.cell(
+			50,
+			85,
+			108,
+			10,
+			'Descripción del producto o servicio',
+			1,
+			'center',
+		);
+		docToDownload.cell(130, 85, 30, 10, 'Precio (c/u)', 1, 'center');
+		docToDownload.cell(162, 85, 22, 10, 'Total', 1, 'center');
+
+		// Celdas de prueba
+		docToDownload.setFont('helvetica', 'normal');
+		// Celda 1
+		docToDownload.cell(10, 10, 16, 20, '1', 2, 'center'); // Item 1
+		docToDownload.cell(
+			26,
+			85,
+			18,
+			20,
+			`${formData.itemAmount1 ? formData.itemAmount1 : '0'}`,
+			2,
+			'center',
+		); // Cantidad 1
+		docToDownload.cell(
+			50,
+			85,
+			108,
+			20,
+			`${formData.itemDescription1 ? formData.itemDescription1 : '-'}`,
+			2,
+			'center',
+		); // Descripción 1
+		docToDownload.cell(
+			130,
+			85,
+			30,
+			20,
+			`${formData.itemPrice1} S/.`,
+			2,
+			'center',
+		); // Precio unitario 1
+		docToDownload.cell(
+			162,
+			85,
+			22,
+			20,
+			`${parseFloat(formData.itemAmount1 ? (formData.itemAmount1 as string) : '0') * parseFloat(formData.itemPrice1 ? (formData.itemPrice1 as string) : '0')} S/.`,
+			2,
+			'center',
+		); // Total 1
+		// Celda 2
+		docToDownload.cell(10, 85, 16, 20, '2', 3, 'center'); // Item 2
+		docToDownload.cell(
+			26,
+			85,
+			18,
+			20,
+			`${formData.itemAmount2 ? formData.itemAmount2 : '0'}`,
+			3,
+			'center',
+		); // Cantidad 2
+		docToDownload.cell(
+			52,
+			85,
+			108,
+			20,
+			`${formData.itemDescription2 ? formData.itemDescription2 : '-'}`,
+			3,
+			'center',
+		); // Descripción 2
+		docToDownload.cell(
+			132,
+			85,
+			30,
+			20,
+			`${formData.itemPrice2} S/.`,
+			3,
+			'center',
+		); // Precio unitario 2
+		docToDownload.cell(
+			164,
+			85,
+			22,
+			20,
+			`${parseFloat(formData.itemAmount2 ? (formData.itemAmount2 as string) : '0') * parseFloat(formData.itemPrice2 ? (formData.itemPrice2 as string) : '0')} S/.`,
+			3,
+			'center',
+		); // Total 2
+		// Celda 3
+		docToDownload.cell(10, 85, 16, 20, '3', 5, 'center'); // Item 3
+		docToDownload.cell(
+			26,
+			85,
+			18,
+			20,
+			`${formData.itemAmount3 ? formData.itemAmount3 : '0'}`,
+			5,
+			'center',
+		); // Cantidad 3
+		docToDownload.cell(
+			52,
+			85,
+			108,
+			20,
+			`${formData.itemDescription3 ? formData.itemDescription3 : '-'}`,
+			5,
+			'center',
+		); // Descripción 3
+		docToDownload.cell(
+			132,
+			85,
+			30,
+			20,
+			`${formData.itemPrice3} S/.`,
+			5,
+			'center',
+		); // Precio unitario 3
+		docToDownload.cell(
+			164,
+			85,
+			22,
+			20,
+			`${parseFloat(formData.itemAmount3 ? (formData.itemAmount3 as string) : '0') * parseFloat(formData.itemPrice3 ? (formData.itemPrice3 as string) : '0')} S/.`,
+			5,
+			'center',
+		); // Total 3
+		// Celda 4
+		docToDownload.cell(10, 85, 16, 20, '4', 6, 'center'); // Item 4
+		docToDownload.cell(
+			26,
+			85,
+			18,
+			20,
+			`${formData.itemAmount4 ? formData.itemAmount4 : '0'}`,
+			6,
+			'center',
+		); // Cantidad 4
+		docToDownload.cell(
+			52,
+			85,
+			108,
+			20,
+			`${formData.itemDescription4 ? formData.itemDescription4 : '-'}`,
+			6,
+			'center',
+		); // Descripción 4
+		docToDownload.cell(
+			132,
+			85,
+			30,
+			20,
+			`${formData.itemPrice4} S/.`,
+			6,
+			'center',
+		); // Precio unitario 4
+		docToDownload.cell(
+			164,
+			85,
+			22,
+			20,
+			`${parseFloat(formData.itemAmount4 ? (formData.itemAmount4 as string) : '0') * parseFloat(formData.itemPrice4 ? (formData.itemPrice4 as string) : '0')} S/.`,
+			6,
+			'center',
+		); // Total 4
+		// Celda 5
+		docToDownload.cell(10, 85, 16, 20, '5', 7, 'center'); // Item 5
+		docToDownload.cell(
+			26,
+			85,
+			18,
+			20,
+			`${formData.itemAmount5 ? formData.itemAmount5 : '0'}`,
+			7,
+			'center',
+		); // Cantidad 5
+		docToDownload.cell(
+			52,
+			85,
+			108,
+			20,
+			`${formData.itemDescription5 ? formData.itemDescription5 : '-'}`,
+			7,
+			'center',
+		); // Descripción 5
+		docToDownload.cell(
+			132,
+			85,
+			30,
+			20,
+			`${formData.itemPrice5} S/.`,
+			7,
+			'center',
+		); // Precio unitario 5
+		docToDownload.cell(
+			164,
+			85,
+			22,
+			20,
+			`${parseFloat(formData.itemAmount4 ? (formData.itemAmount5 as string) : '0') * parseFloat(formData.itemPrice4 ? (formData.itemPrice5 as string) : '0')} S/.`,
+			7,
+			'center',
+		); // Total 5
+
+		// Sub Total
+		docToDownload.setFont('helvetica', 'bold');
+		docToDownload.cell(142, 205, 32, 8, 'Sub Total:', 1, 'center');
+		docToDownload.setFont('helvetica', 'normal');
+		docToDownload.cell(
+			164,
+			205,
+			30,
+			8,
+			`${formData.subtotal} S/.`,
+			1,
+			'center',
+		);
+		// IGV
+		docToDownload.setFont('helvetica', 'bold');
+		docToDownload.cell(142, 215, 32, 8, 'IGV:', 2, 'right');
+		docToDownload.setFont('helvetica', 'normal');
+		docToDownload.cell(164, 215, 30, 8, `${formData.igv} S/.`, 2, 'right');
+		// Total
+		docToDownload.setFont('helvetica', 'bold');
+		docToDownload.cell(142, 225, 32, 8, 'Total:', 3, 'left');
+		docToDownload.setFont('helvetica', 'normal');
+		docToDownload.cell(164, 225, 30, 8, `${formData.total} S/.`, 3, 'left');
+
+		// Observaciones
+		docToDownload.setFont('helvetica', 'bold');
+		docToDownload.text('Condiciones de la oferta:', 10, 230);
+		docToDownload.setFont('helvetica', 'normal');
+		docToDownload.text(
+			`1. Los precios son en moneda nacional y no incluyen IGV.\n2. La validez de la oferta es de 30 días calendario.\n3. La forma de pago es 50 % de adelanto y 50 % antes de la entrega.\n4. La entrega de los productos es de 15 días calendario de emitida la orden de compra.`,
+			10,
+			235,
+		);
+
+		// Línea de separación
+		// Al final para que no afecte a la tabla
+		docToDownload.setLineWidth(0.1);
+		docToDownload.setDrawColor(0, 0, 0);
+		docToDownload.setLineDashPattern([2.5], 1);
+		docToDownload.line(10, 65, 200, 65);
+
+		// # # # # # # # #  PDF BASE # # # # # # # #
+
+		docToDownload.save(`cotizacion#${formData.nCotization}.pdf`);
 	});
 </script>
 
