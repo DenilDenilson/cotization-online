@@ -1,3 +1,7 @@
+export const IGV_RATE = 0.18;
+
+export type TaxMode = 'exclusive' | 'included';
+
 export type CotizacionItem = {
 	index: number;
 	description: string;
@@ -14,6 +18,7 @@ export type CotizacionData = {
 	clientContact: string;
 	clientAddress: string;
 	subject: string;
+	taxMode: TaxMode;
 	items: CotizacionItem[];
 	subtotal: number;
 	igv: number;
@@ -33,6 +38,12 @@ const getStringFields = (formData: FormData, name: string) =>
 const hasFieldValue = (formData: FormData, name: string) =>
 	getStringField(formData, name) !== '';
 
+const getBooleanField = (formData: FormData, name: string) =>
+	formData.get(name) === 'true';
+
+const getTaxModeField = (formData: FormData): TaxMode =>
+	getStringField(formData, 'taxMode') === 'included' ? 'included' : 'exclusive';
+
 export const parseNumberField = (value: string) => {
 	const parsedValue = Number.parseFloat(value.replace(',', '.'));
 	return Number.isFinite(parsedValue) ? parsedValue : 0;
@@ -41,10 +52,22 @@ export const parseNumberField = (value: string) => {
 const getNumberField = (formData: FormData, name: string) =>
 	parseNumberField(getStringField(formData, name));
 
+export const roundMoney = (value: number) => {
+	const safeValue = Number.isFinite(value) ? value : 0;
+	return Math.round((safeValue + Number.EPSILON) * 100) / 100;
+};
+
+export const roundMoneyForConsumer = (value: number) => {
+	const safeValue = Number.isFinite(value) ? value : 0;
+	return Math.floor((safeValue + Number.EPSILON) * 100) / 100;
+};
+
+export const toMoneyInputValue = (value: number) => roundMoney(value).toFixed(2);
+
 export const formatMoney = (value: number) => {
 	const safeValue = Number.isFinite(value) ? value : 0;
 
-	return `${safeValue.toLocaleString('es-PE', {
+	return `${roundMoney(safeValue).toLocaleString('es-PE', {
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
 	})} S/.`;
@@ -60,6 +83,7 @@ export const createEmptyCotizacion = (): CotizacionData => ({
 	clientContact: '',
 	clientAddress: '',
 	subject: '',
+	taxMode: 'exclusive',
 	items: [
 		{
 			index: 1,
@@ -74,6 +98,36 @@ export const createEmptyCotizacion = (): CotizacionData => ({
 	total: 0,
 });
 
+export const calculateCotizacionTotals = (
+	items: Pick<CotizacionItem, 'amount' | 'price' | 'total'>[],
+	taxMode: TaxMode,
+) => {
+	const itemsTotal = roundMoneyForConsumer(
+		items.reduce((sum, item) => sum + item.total, 0),
+	);
+
+	if (taxMode === 'included') {
+		const subtotal = roundMoney(itemsTotal / (1 + IGV_RATE));
+		const igv = roundMoney(itemsTotal - subtotal);
+
+		return {
+			subtotal,
+			igv,
+			total: itemsTotal,
+		};
+	}
+
+	const subtotal = itemsTotal;
+	const igv = roundMoneyForConsumer(subtotal * IGV_RATE);
+	const total = roundMoneyForConsumer(subtotal + igv);
+
+	return {
+		subtotal,
+		igv,
+		total,
+	};
+};
+
 const cotizacionItemsFromFormData = (formData: FormData) => {
 	const descriptions = getStringFields(formData, 'itemDescription');
 	const amounts = getStringFields(formData, 'itemAmount');
@@ -83,27 +137,32 @@ const cotizacionItemsFromFormData = (formData: FormData) => {
 	return Array.from({ length: itemCount }, (_, index) => {
 		const amount = parseNumberField(amounts[index] ?? '');
 		const price = parseNumberField(prices[index] ?? '');
+		const total = roundMoneyForConsumer(amount * price);
 
 		return {
 			index: index + 1,
 			description: descriptions[index] ?? '',
 			amount,
 			price,
-			total: amount * price,
+			total,
 		};
 	});
 };
 
 export const cotizacionFromFormData = (formData: FormData): CotizacionData => {
+	const taxMode = getTaxModeField(formData);
 	const items = cotizacionItemsFromFormData(formData);
-	const calculatedSubtotal = items.reduce((sum, item) => sum + item.total, 0);
-	const subtotal = hasFieldValue(formData, 'subtotal')
+	const calculatedTotals = calculateCotizacionTotals(items, taxMode);
+	const hasManualTotals = getBooleanField(formData, 'manualTotals');
+	const subtotal = hasManualTotals && hasFieldValue(formData, 'subtotal')
 		? getNumberField(formData, 'subtotal')
-		: calculatedSubtotal;
-	const igv = hasFieldValue(formData, 'igv') ? getNumberField(formData, 'igv') : 0;
-	const total = hasFieldValue(formData, 'total')
+		: calculatedTotals.subtotal;
+	const igv = hasManualTotals && hasFieldValue(formData, 'igv')
+		? getNumberField(formData, 'igv')
+		: calculatedTotals.igv;
+	const total = hasManualTotals && hasFieldValue(formData, 'total')
 		? getNumberField(formData, 'total')
-		: subtotal + igv;
+		: calculatedTotals.total;
 
 	return {
 		number: getStringField(formData, 'nCotization'),
@@ -113,6 +172,7 @@ export const cotizacionFromFormData = (formData: FormData): CotizacionData => {
 		clientContact: getStringField(formData, 'nameClient'),
 		clientAddress: getStringField(formData, 'directionClient'),
 		subject: getStringField(formData, 'asunto'),
+		taxMode,
 		items,
 		subtotal,
 		igv,

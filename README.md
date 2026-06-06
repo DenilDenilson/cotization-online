@@ -11,6 +11,9 @@ El proyecto está construido con Astro y usa jsPDF en el navegador para crear un
 - Vista previa del PDF dentro de la página mediante un `embed`.
 - Generación de PDF con datos de Sonymat, tabla de ítems, subtotales, IGV, total y condiciones de la oferta.
 - Cálculo de total por ítem a partir de cantidad y precio unitario.
+- Cálculo automático de subtotal, IGV al 18 % y total.
+- Soporte para precios `Más IGV` o `IGV incluido`.
+- Edición manual opcional de totales cuando sea necesario.
 - Descarga del archivo como `cotizacion#<numero>.pdf`.
 
 ## Stack
@@ -102,5 +105,5 @@ npm start
 ## Estado actual y próximos pasos sugeridos
 
 - La aplicación funciona del lado del cliente; no tiene backend ni persistencia de cotizaciones.
-- Los campos `subtotal`, `igv` y `total` pueden ingresarse manualmente; si `subtotal` o `total` quedan vacíos se usan cálculos base de los ítems.
+- Los campos `subtotal`, `igv` y `total` se calculan automáticamente; pueden desbloquearse con `Editar totales manualmente`.
 - Sería útil agregar validaciones de formulario para evitar PDFs con campos vacíos o valores inválidos.

@@ -16,8 +16,7 @@ const COMPANY = {
 	phones: '933156539 | 998085837',
 };
 
-const CONDITIONS = [
-	'1. Los precios son en moneda nacional y no incluyen IGV.',
+const CONDITIONS_AFTER_TAX_MODE = [
 	'2. La validez de la oferta es de 30 días calendario.',
 	'3. La forma de pago es 50 % de adelanto y 50 % antes de la entrega.',
 	'4. La entrega de los productos es de 15 días calendario de emitida la orden de compra.',
@@ -251,7 +250,16 @@ const drawTotals = (
 	return y + PAGE.totalsHeight;
 };
 
-const drawConditions = (doc: PdfDocument, startY: number) => {
+const getTaxModeCondition = (data: CotizacionData) =>
+	data.taxMode === 'included'
+		? '1. Los precios son en moneda nacional e incluyen IGV.'
+		: '1. Los precios son en moneda nacional y no incluyen IGV.';
+
+const drawConditions = (
+	doc: PdfDocument,
+	data: CotizacionData,
+	startY: number,
+) => {
 	let y = startY + 10;
 
 	if (y + PAGE.conditionsHeight > PAGE.bottomY) {
@@ -262,7 +270,11 @@ const drawConditions = (doc: PdfDocument, startY: number) => {
 	setFont(doc, 12, 'bold');
 	doc.text('Condiciones de la oferta:', 10, y);
 	setFont(doc, 12);
-	doc.text(CONDITIONS.join('\n'), 10, y + 5);
+	doc.text(
+		[getTaxModeCondition(data), ...CONDITIONS_AFTER_TAX_MODE].join('\n'),
+		10,
+		y + 5,
+	);
 };
 
 export const createCotizacionPdf = (data: CotizacionData) => {
@@ -272,7 +284,7 @@ export const createCotizacionPdf = (data: CotizacionData) => {
 	drawIntro(doc);
 	const endOfTableY = drawItemsTable(doc, data);
 	const endOfTotalsY = drawTotals(doc, data, endOfTableY);
-	drawConditions(doc, endOfTotalsY);
+	drawConditions(doc, data, endOfTotalsY);
 
 	return doc;
 };
