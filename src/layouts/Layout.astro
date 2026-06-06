@@ -1,47 +1,125 @@
 ---
 interface Props {
 	title: string;
+	description?: string;
 }
 
-const { title } = Astro.props;
+const {
+	title,
+	description = 'Generador de cotizaciones en PDF para Sonymat.',
+} = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="es">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content="Astro description" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="description" content={description} />
+		<meta name="color-scheme" content="dark" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<link rel="stylesheet" href="https://unpkg.com/boltcss/bolt.min.css" />
 		<title>{title}</title>
 	</head>
 	<body>
 		<slot />
-		<!-- <script
-			is:inline
-			src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
-		></script> -->
 	</body>
 </html>
 <style is:global>
 	:root {
-		--accent: 136, 58, 234;
-		--accent-light: 224, 204, 250;
-		--accent-dark: 49, 10, 101;
-		--accent-gradient: linear-gradient(
-			45deg,
-			rgb(var(--accent)),
-			rgb(var(--accent-light)) 30%,
-			white 60%
-		);
+		color-scheme: dark;
+		--color-bg: #101115;
+		--color-bg-soft: #151821;
+		--color-surface: #1b1f2a;
+		--color-surface-strong: #232936;
+		--color-border: #353d4c;
+		--color-border-strong: #4d596d;
+		--color-text: #f5f7fb;
+		--color-text-muted: #b5bfce;
+		--color-accent: #38d6aa;
+		--color-accent-strong: #1fa985;
+		--color-accent-contrast: #071512;
+		--color-warning: #f0b75c;
+		--shadow-soft: 0 18px 50px rgba(0, 0, 0, 0.32);
+		--radius-sm: 6px;
+		--radius-md: 8px;
+		--focus-ring: 0 0 0 3px rgba(56, 214, 170, 0.22);
 	}
+
+	* {
+		box-sizing: border-box;
+	}
+
+	html,
+	body {
+		min-height: 100%;
+	}
+
 	html {
+		background: var(--color-bg);
 		font-family: system-ui, sans-serif;
-		background: #13151a;
-		background-size: 224px;
 	}
+
+	body {
+		background:
+			linear-gradient(180deg, rgba(31, 34, 45, 0.78), rgba(16, 17, 21, 0) 360px),
+			var(--color-bg);
+		color: var(--color-text);
+		margin: 0;
+	}
+
+	body,
+	button,
+	input {
+		font: inherit;
+	}
+
+	button,
+	input {
+		border-radius: var(--radius-sm);
+	}
+
+	input {
+		background: #0d0f14;
+		border: 1px solid var(--color-border);
+		color: var(--color-text);
+		min-height: 42px;
+		padding: 0.62rem 0.75rem;
+	}
+
+	input::placeholder {
+		color: #7d8898;
+	}
+
+	input:focus {
+		border-color: var(--color-accent);
+		box-shadow: var(--focus-ring);
+		outline: none;
+	}
+
+	button {
+		background: var(--color-accent);
+		border: 1px solid transparent;
+		color: var(--color-accent-contrast);
+		cursor: pointer;
+		font-weight: 700;
+		padding: 0.7rem 1rem;
+		transition:
+			background-color 160ms ease,
+			border-color 160ms ease,
+			transform 160ms ease;
+	}
+
+	button:hover {
+		background: #55e4bb;
+		transform: translateY(-1px);
+	}
+
+	button:focus-visible {
+		box-shadow: var(--focus-ring);
+		outline: none;
+	}
+
 	code {
 		font-family:
 			Menlo,

@@ -1,942 +1,197 @@
 ---
+import CotizacionForm from '../components/CotizacionForm.astro';
 import Layout from '../layouts/Layout.astro';
-import Card from '../components/Card.astro';
 ---
 
-<Layout title="Cotizacion sonymat">
-	<h1>Cotizaciones sonymat</h1>
+<Layout title="Cotización Sonymat">
 	<main>
-		<form action="" id="cotizationData">
-			<p>Ingrese los datos</p>
-			<div class="form-inputData">
-				<label for="nCotization">
-					# de cotización
-					<input type="number" id="nCotization" name="nCotization" />
-				</label>
-				<label for="dateCotization">
-					Fecha de cotización
-					<input type="date" id="dateCotization" name="dateCotization" />
-				</label>
-				<label for="nameCompany">
-					Nombre de la empresa
-					<input type="text" id="nameCompany" name="nameCompany" />
-				</label>
-				<label for="rucCompany">
-					RUC de la empresa
-					<input type="text" id="rucCompany" name="rucCompany" />
-				</label>
-				<!-- <label for="dateValidCotization">
-					Cotización válida hasta
-					<input
-						type="date"
-						id="dateValidCotization"
-						name="dateValidCotization"
-					/>
-				</label> -->
-				<label for="nameClient">
-					Contacto del cliente
-					<input type="text" id="nameClient" name="nameClient" />
-				</label>
-				<label for="directionClient">
-					Dirección del cliente
-					<input type="text" id="directionClient" name="directionClient" />
-				</label>
-				<label for="asunto">
-					Asunto
-					<input type="text" id="asunto" name="asunto" />
-				</label>
-				<label for="itemDescription1">
-					Descripción del item #1
-					<input type="text" id="itemDescription1" name="itemDescription1" />
-				</label>
-				<label for="itemAmount1">
-					Cantidad del item #1
-					<input type="number" id="itemAmount1" name="itemAmount1" />
-				</label>
-				<label for="itemPrice1">
-					Precio del item #1
-					<input type="number" id="itemPrice1" name="itemPrice1" />
-				</label>
-				<label for="itemDescription2">
-					Descripción del item #2
-					<input type="text" id="itemDescription2" name="itemDescription2" />
-				</label>
-				<label for="itemAmount2">
-					Cantidad del item #2
-					<input type="number" id="itemAmount2" name="itemAmount2" />
-				</label>
-				<label for="itemPrice2">
-					Precio del item #2
-					<input type="number" id="itemPrice2" name="itemPrice2" />
-				</label>
-				<label for="itemDescription3">
-					Descripción del item #3
-					<input type="text" id="itemDescription3" name="itemDescription3" />
-				</label>
-				<label for="itemAmount3">
-					Cantidad del item #3
-					<input type="number" id="itemAmount3" name="itemAmount3" />
-				</label>
-				<label for="itemPrice3">
-					Precio del item #3
-					<input type="number" id="itemPrice3" name="itemPrice3" />
-				</label>
-				<label for="itemDescription4">
-					Descripción del item #4
-					<input type="text" id="itemDescription4" name="itemDescription4" />
-				</label>
-				<label for="itemAmount4">
-					Cantidad del item #4
-					<input type="number" id="itemAmount4" name="itemAmount4" />
-				</label>
-				<label for="itemPrice4">
-					Precio del item #4
-					<input type="number" id="itemPrice4" name="itemPrice4" />
-				</label>
-				<label for="itemDescription5">
-					Descripción del item #5
-					<input type="text" id="itemDescription5" name="itemDescription5" />
-				</label>
-				<label for="itemAmount5">
-					Cantidad del item #5
-					<input type="number" id="itemAmount5" name="itemAmount5" />
-				</label>
-				<label for="itemPrice5">
-					Precio del item #5
-					<input type="number" id="itemPrice5" name="itemPrice5" />
-				</label>
-				<label for="subtotal">
-					Subtotal
-					<input type="number" id="subtotal" name="subtotal" />
-				</label>
-				<label for="igv">
-					IGV
-					<input type="number" id="igv" name="igv" />
-				</label>
-				<label for="total">
-					Total
-					<input type="number" id="total" name="total" />
-				</label>
-			</div>
-			<button type="submit"> Actualizar cotización </button>
-		</form>
+		<h1>Cotizaciones Sonymat</h1>
+
+		<section class="form-section" aria-label="Datos de la cotización">
+			<CotizacionForm />
+		</section>
+
+		<section class="preview-section" aria-labelledby="previewTitle">
+			<h2 id="previewTitle">Mira tu cotización</h2>
+			<embed id="pdfViewer" src="" title="Cotización base" type="application/pdf" />
+			<button id="downloadCotizacion" type="button">
+				Descarga la cotización
+			</button>
+		</section>
 	</main>
-
-	<h2>Mira tu cotización</h2>
-	<embed id="pdfViewer" src="" title="Cotizacion base" type="application/pdf" />
-
-	<button id="downloadCotization">Descarga la cotización</button>
 </Layout>
 
 <script>
-	import { jsPDF } from 'jspdf';
+	import {
+		cotizacionFilename,
+		cotizacionFromFormData,
+		cotizacionTitle,
+		createEmptyCotizacion,
+		type CotizacionData,
+	} from '../lib/cotizacion.js';
+	import { createCotizacionPdf } from '../lib/cotizacionPdf.js';
 
-	const doc = new jsPDF();
+	const formCotizacion = document.getElementById(
+		'cotizacionData',
+	) as HTMLFormElement | null;
+	const pdfViewer = document.getElementById('pdfViewer') as HTMLEmbedElement | null;
+	const downloadCotizacion = document.getElementById(
+		'downloadCotizacion',
+	) as HTMLButtonElement | null;
 
-	// # # # # # # # #  PDF BASE # # # # # # # #
-	// Empezamos creando el pdf
-	doc.setFontSize(32);
-	doc.setFont('helvetica', 'bold');
-	doc.text('Sonymat', 10, 20);
-	// Datos de Sonymat
-	doc.setFontSize(12);
-	doc.text('RUC:', 172, 15, { align: 'right' });
-	doc.setFont('helvetica', 'normal');
-	doc.text('10158643095', 200, 15, { align: 'right' });
+	let currentPreviewUrl: string | null = null;
 
-	doc.setFont('helvetica', 'bold');
-	doc.text('Cell:', 152, 20, { align: 'right' });
-	doc.setFont('helvetica', 'normal');
-	doc.text('933156539 | 998085837', 200, 20, { align: 'right' });
+	const getCurrentCotizacion = () =>
+		formCotizacion
+			? cotizacionFromFormData(new FormData(formCotizacion))
+			: createEmptyCotizacion();
 
-	// Señores, Ruc, Contacto, Fecha, Dirección, Asunto
-	doc.setFont('helvetica', 'bold');
-	doc.text('Fecha', 10, 30);
-	doc.text(': ', 32, 30);
+	const renderPdfPreview = (data: CotizacionData) => {
+		if (!pdfViewer) return;
 
-	doc.text('Señores', 10, 35);
-	doc.text(': ', 32, 35);
-
-	doc.text('RUC', 10, 40);
-	doc.text(': ', 32, 40);
-
-	doc.text('Contacto', 10, 45);
-	doc.text(': ', 32, 45);
-
-	doc.text('Dirección', 10, 50);
-	doc.text(': ', 32, 50);
-
-	doc.text('Asunto', 10, 55);
-	doc.text(': ', 32, 55);
-
-	// Texto de presentación
-	doc.setFont('helvetica', 'normal');
-	doc.text('De nuestra consideración', 10, 70);
-	doc.text(
-		'En atención a su amable solicitud, tenemos el agrado de presentarle nuestra propuesta\ntécnico - económica de lo siguiente:',
-		10,
-		75,
-	);
-
-	// Tabla de productos
-	// doc.setLineDashPattern(); // Regresa a la línea sólida por defecto, pero no me gusta como marca el IDE el error
-	doc.setLineWidth(0.5);
-	doc.setFont('helvetica', 'bold');
-	// Celdas headers
-	doc.cell(10, 85, 16, 10, 'Item', 1, 'center');
-	doc.cell(26, 85, 18, 10, 'Cant.', 1, 'center');
-	doc.cell(50, 85, 110, 10, 'Descripción del producto o servicio', 1, 'center');
-	doc.cell(130, 85, 30, 10, 'Precio (c/u)', 1, 'center');
-	doc.cell(162, 85, 20, 10, 'Total', 1, 'center');
-
-	// Celdas de prueba
-	doc.setFont('helvetica', 'normal');
-	// Celda 1
-	doc.cell(10, 10, 16, 20, '1', 2, 'center');
-	doc.cell(26, 85, 18, 20, '2', 2, 'center');
-	doc.cell(50, 85, 110, 20, 'Descripción del producto o servicio', 2, 'center');
-	doc.cell(130, 85, 30, 20, '500', 2, 'center');
-	doc.cell(162, 85, 20, 20, '100000', 2, 'center');
-	doc.cell(10, 85, 16, 20, '2', 3, 'center');
-	// Celda 2
-	doc.cell(26, 85, 18, 20, '3', 3, 'center');
-	doc.cell(52, 85, 110, 20, 'Descripción del producto o servicio', 3, 'center');
-	doc.cell(132, 85, 30, 20, '25', 3, 'center');
-	doc.cell(164, 85, 20, 20, '75', 3, 'center');
-	// Celda 3
-	doc.cell(10, 85, 16, 20, '3', 5, 'center');
-	doc.cell(26, 85, 18, 20, '3', 5, 'center');
-	doc.cell(52, 85, 110, 20, 'Descripción del producto o servicio', 5, 'center');
-	doc.cell(132, 85, 30, 20, '25', 5, 'center');
-	doc.cell(164, 85, 20, 20, '75', 5, 'center');
-	// Celda 4
-	doc.cell(10, 85, 16, 20, '4', 6, 'center');
-	doc.cell(26, 85, 18, 20, '3', 6, 'center');
-	doc.cell(52, 85, 110, 20, 'Descripción del producto o servicio', 6, 'center');
-	doc.cell(132, 85, 30, 20, '25', 6, 'center');
-	doc.cell(164, 85, 20, 20, '75', 6, 'center');
-	// Celda 5
-	doc.cell(10, 85, 16, 20, '5', 7, 'center');
-	doc.cell(26, 85, 18, 20, '3', 7, 'center');
-	doc.cell(52, 85, 110, 20, 'Descripción del producto o servicio', 7, 'center');
-	doc.cell(132, 85, 30, 20, '25', 7, 'center');
-	doc.cell(164, 85, 20, 20, '75', 7, 'center');
-
-	// Sub Total
-	doc.setFont('helvetica', 'bold');
-	doc.cell(142, 205, 32, 8, 'Sub Total:', 1, 'center');
-	doc.setFont('helvetica', 'normal');
-	doc.cell(164, 205, 30, 8, '25 S/.', 1, 'center');
-	// IGV
-	doc.setFont('helvetica', 'bold');
-	doc.cell(142, 215, 32, 8, 'IGV:', 2, 'right');
-	doc.setFont('helvetica', 'normal');
-	doc.cell(164, 215, 30, 8, '5 S/.', 2, 'right');
-	// Total
-	doc.setFont('helvetica', 'bold');
-	doc.cell(142, 225, 32, 8, 'Total:', 3, 'left');
-	doc.setFont('helvetica', 'normal');
-	doc.cell(164, 225, 30, 8, '30 S/.', 3, 'left');
-
-	// Observaciones
-	doc.setFont('helvetica', 'bold');
-	doc.text('Condiciones de la oferta:', 10, 230);
-	doc.setFont('helvetica', 'normal');
-	doc.text(
-		`1. Los precios son en moneda nacional y no incluyen IGV.\n2. La validez de la oferta es de 30 días calendario.\n3. La forma de pago es 50 % de adelanto y 50 % antes de la entrega.\n4. La entrega de los productos es de 15 días calendario de emitida la orden de compra.`,
-		10,
-		235,
-	);
-
-	// Línea de separación
-	// Al final para que no afecte a la tabla
-	doc.setLineWidth(0.1);
-	doc.setDrawColor(0, 0, 0);
-	doc.setLineDashPattern([2.5], 1);
-	doc.line(10, 65, 200, 65);
-
-	// # # # # # # # #  PDF BASE # # # # # # # #
-
-	const pdfLocalSrc = doc.output('bloburl');
-
-	const formCotization = document.getElementById('cotizationData');
-	const pdfViewer = document.getElementById('pdfViewer') as HTMLEmbedElement;
-	const downloadCotization = document.getElementById('downloadCotization');
-
-	pdfViewer.src = String(pdfLocalSrc);
-
-	formCotization?.addEventListener('submit', (e) => {
-		e.preventDefault();
-		const formData = Object.fromEntries(
-			new FormData(e.target as HTMLFormElement),
-		);
-		console.log('Actualizando cotización', formData);
-		if (pdfViewer !== null) {
-			console.log('Actualizando pdf');
-
-			const newDoc = new jsPDF();
-			// # # # # # # # #  PDF BASE # # # # # # # #
-			// Empezamos creando el pdf
-			newDoc.setFontSize(32);
-			newDoc.setFont('helvetica', 'bold');
-			newDoc.text('Sonymat', 10, 20);
-			// Datos de Sonymat
-			newDoc.setFontSize(12);
-			newDoc.text('RUC:', 172, 15, { align: 'right' });
-			newDoc.setFont('helvetica', 'normal');
-			newDoc.text('10158643095', 200, 15, { align: 'right' });
-
-			newDoc.setFont('helvetica', 'bold');
-			newDoc.text('Cell:', 152, 20, { align: 'right' });
-			newDoc.setFont('helvetica', 'normal');
-			newDoc.text('933156539 | 998085837', 200, 20, { align: 'right' });
-
-			// Señores, Ruc, Contacto, Fecha, Dirección, Asunto
-			newDoc.setFont('helvetica', 'bold');
-			newDoc.text('Fecha', 10, 30);
-			newDoc.text(': ', 32, 30);
-			newDoc.setFont('helvetica', 'normal');
-			newDoc.text(`${formData.dateCotization}`, 34, 30);
-
-			newDoc.setFont('helvetica', 'bold');
-			newDoc.text('Señores', 10, 35);
-			newDoc.text(': ', 32, 35);
-			newDoc.setFont('helvetica', 'normal');
-			newDoc.text(`${formData.nameCompany}`, 34, 35);
-
-			newDoc.setFont('helvetica', 'bold');
-			newDoc.text('RUC', 10, 40);
-			newDoc.text(': ', 32, 40);
-			newDoc.setFont('helvetica', 'normal');
-			newDoc.text(`${formData.rucCompany}`, 34, 40);
-
-			newDoc.setFont('helvetica', 'bold');
-			newDoc.text('Contacto', 10, 45);
-			newDoc.text(': ', 32, 45);
-			newDoc.setFont('helvetica', 'normal');
-			newDoc.text(`${formData.nameClient}`, 34, 45);
-
-			newDoc.setFont('helvetica', 'bold');
-			newDoc.text('Dirección', 10, 50);
-			newDoc.text(': ', 32, 50);
-			newDoc.setFont('helvetica', 'normal');
-			newDoc.text(`${formData.directionClient}`, 34, 50);
-
-			newDoc.setFont('helvetica', 'bold');
-			newDoc.text('Asunto', 10, 55);
-			newDoc.text(': ', 32, 55);
-			newDoc.setFont('helvetica', 'normal');
-			newDoc.text(`${formData.asunto}`, 34, 55);
-
-			// Texto de presentación
-			newDoc.setFont('helvetica', 'normal');
-			newDoc.text('De nuestra consideración', 10, 70);
-			newDoc.text(
-				'En atención a su amable solicitud, tenemos el agrado de presentarle nuestra propuesta\ntécnico - económica de lo siguiente:',
-				10,
-				75,
-			);
-
-			// Tabla de productos
-			// newDoc.setLineDashPattern(); // Regresa a la línea sólida por defecto, pero no me gusta como marca el IDE el error
-			newDoc.setLineWidth(0.5);
-			newDoc.setFont('helvetica', 'bold');
-			// Celdas headers
-			newDoc.cell(10, 85, 16, 10, 'Item', 1, 'center');
-			newDoc.cell(26, 85, 18, 10, 'Cant.', 1, 'center');
-			newDoc.cell(
-				50,
-				85,
-				108,
-				10,
-				'Descripción del producto o servicio',
-				1,
-				'center',
-			);
-			newDoc.cell(130, 85, 30, 10, 'Precio (c/u)', 1, 'center');
-			newDoc.cell(162, 85, 22, 10, 'Total', 1, 'center');
-
-			// Celdas de prueba
-			newDoc.setFont('helvetica', 'normal');
-			// Celda 1
-			newDoc.cell(10, 10, 16, 20, '1', 2, 'center'); // Item 1
-			newDoc.cell(
-				26,
-				85,
-				18,
-				20,
-				`${formData.itemAmount1 ? formData.itemAmount1 : '0'}`,
-				2,
-				'center',
-			); // Cantidad 1
-			newDoc.cell(
-				50,
-				85,
-				108,
-				20,
-				`${formData.itemDescription1 ? formData.itemDescription1 : '-'}`,
-				2,
-				'center',
-			); // Descripción 1
-			newDoc.cell(130, 85, 30, 20, `${formData.itemPrice1} S/.`, 2, 'center'); // Precio unitario 1
-			newDoc.cell(
-				162,
-				85,
-				22,
-				20,
-				`${parseFloat(formData.itemAmount1 ? (formData.itemAmount1 as string) : '0') * parseFloat(formData.itemPrice1 ? (formData.itemPrice1 as string) : '0')} S/.`,
-				2,
-				'center',
-			); // Total 1
-			// Celda 2
-			newDoc.cell(10, 85, 16, 20, '2', 3, 'center'); // Item 2
-			newDoc.cell(
-				26,
-				85,
-				18,
-				20,
-				`${formData.itemAmount2 ? formData.itemAmount2 : '0'}`,
-				3,
-				'center',
-			); // Cantidad 2
-			newDoc.cell(
-				52,
-				85,
-				108,
-				20,
-				`${formData.itemDescription2 ? formData.itemDescription2 : '-'}`,
-				3,
-				'center',
-			); // Descripción 2
-			newDoc.cell(132, 85, 30, 20, `${formData.itemPrice2} S/.`, 3, 'center'); // Precio unitario 2
-			newDoc.cell(
-				164,
-				85,
-				22,
-				20,
-				`${parseFloat(formData.itemAmount2 ? (formData.itemAmount2 as string) : '0') * parseFloat(formData.itemPrice2 ? (formData.itemPrice2 as string) : '0')} S/.`,
-				3,
-				'center',
-			); // Total 2
-			// Celda 3
-			newDoc.cell(10, 85, 16, 20, '3', 5, 'center'); // Item 3
-			newDoc.cell(
-				26,
-				85,
-				18,
-				20,
-				`${formData.itemAmount3 ? formData.itemAmount3 : '0'}`,
-				5,
-				'center',
-			); // Cantidad 3
-			newDoc.cell(
-				52,
-				85,
-				108,
-				20,
-				`${formData.itemDescription3 ? formData.itemDescription3 : '-'}`,
-				5,
-				'center',
-			); // Descripción 3
-			newDoc.cell(132, 85, 30, 20, `${formData.itemPrice3} S/.`, 5, 'center'); // Precio unitario 3
-			newDoc.cell(
-				164,
-				85,
-				22,
-				20,
-				`${parseFloat(formData.itemAmount3 ? (formData.itemAmount3 as string) : '0') * parseFloat(formData.itemPrice3 ? (formData.itemPrice3 as string) : '0')} S/.`,
-				5,
-				'center',
-			); // Total 3
-			// Celda 4
-			newDoc.cell(10, 85, 16, 20, '4', 6, 'center'); // Item 4
-			newDoc.cell(
-				26,
-				85,
-				18,
-				20,
-				`${formData.itemAmount4 ? formData.itemAmount4 : '0'}`,
-				6,
-				'center',
-			); // Cantidad 4
-			newDoc.cell(
-				52,
-				85,
-				108,
-				20,
-				`${formData.itemDescription4 ? formData.itemDescription4 : '-'}`,
-				6,
-				'center',
-			); // Descripción 4
-			newDoc.cell(132, 85, 30, 20, `${formData.itemPrice4} S/.`, 6, 'center'); // Precio unitario 4
-			newDoc.cell(
-				164,
-				85,
-				22,
-				20,
-				`${parseFloat(formData.itemAmount4 ? (formData.itemAmount4 as string) : '0') * parseFloat(formData.itemPrice4 ? (formData.itemPrice4 as string) : '0')} S/.`,
-				6,
-				'center',
-			); // Total 4
-			// Celda 5
-			newDoc.cell(10, 85, 16, 20, '5', 7, 'center'); // Item 5
-			newDoc.cell(
-				26,
-				85,
-				18,
-				20,
-				`${formData.itemAmount5 ? formData.itemAmount5 : '0'}`,
-				7,
-				'center',
-			); // Cantidad 5
-			newDoc.cell(
-				52,
-				85,
-				108,
-				20,
-				`${formData.itemDescription5 ? formData.itemDescription5 : '-'}`,
-				7,
-				'center',
-			); // Descripción 5
-			newDoc.cell(132, 85, 30, 20, `${formData.itemPrice5} S/.`, 7, 'center'); // Precio unitario 5
-			newDoc.cell(
-				164,
-				85,
-				22,
-				20,
-				`${parseFloat(formData.itemAmount4 ? (formData.itemAmount5 as string) : '0') * parseFloat(formData.itemPrice4 ? (formData.itemPrice5 as string) : '0')} S/.`,
-				7,
-				'center',
-			); // Total 5
-
-			// Sub Total
-			newDoc.setFont('helvetica', 'bold');
-			newDoc.cell(142, 205, 32, 8, 'Sub Total:', 1, 'center');
-			newDoc.setFont('helvetica', 'normal');
-			newDoc.cell(164, 205, 30, 8, `${formData.subtotal} S/.`, 1, 'center');
-			// IGV
-			newDoc.setFont('helvetica', 'bold');
-			newDoc.cell(142, 215, 32, 8, 'IGV:', 2, 'right');
-			newDoc.setFont('helvetica', 'normal');
-			newDoc.cell(164, 215, 30, 8, `${formData.igv} S/.`, 2, 'right');
-			// Total
-			newDoc.setFont('helvetica', 'bold');
-			newDoc.cell(142, 225, 32, 8, 'Total:', 3, 'left');
-			newDoc.setFont('helvetica', 'normal');
-			newDoc.cell(164, 225, 30, 8, `${formData.total} S/.`, 3, 'left');
-
-			// Observaciones
-			newDoc.setFont('helvetica', 'bold');
-			newDoc.text('Condiciones de la oferta:', 10, 230);
-			newDoc.setFont('helvetica', 'normal');
-			newDoc.text(
-				`1. Los precios son en moneda nacional y no incluyen IGV.\n2. La validez de la oferta es de 30 días calendario.\n3. La forma de pago es 50 % de adelanto y 50 % antes de la entrega.\n4. La entrega de los productos es de 15 días calendario de emitida la orden de compra.`,
-				10,
-				235,
-			);
-
-			// Línea de separación
-			// Al final para que no afecte a la tabla
-			newDoc.setLineWidth(0.1);
-			newDoc.setDrawColor(0, 0, 0);
-			newDoc.setLineDashPattern([2.5], 1);
-			newDoc.line(10, 65, 200, 65);
-
-			// # # # # # # # #  PDF BASE # # # # # # # #
-
-			const newpdfLocalSrc = newDoc.output('bloburl');
-			pdfViewer.title = `Cotización#${formData.nCotization as string}`;
-			pdfViewer.src = String(newpdfLocalSrc);
+		if (currentPreviewUrl) {
+			URL.revokeObjectURL(currentPreviewUrl);
 		}
+
+		const doc = createCotizacionPdf(data);
+		currentPreviewUrl = String(doc.output('bloburl'));
+		pdfViewer.title = cotizacionTitle(data);
+		pdfViewer.src = currentPreviewUrl;
+	};
+
+	renderPdfPreview(getCurrentCotizacion());
+
+	formCotizacion?.addEventListener('submit', (event) => {
+		event.preventDefault();
+		renderPdfPreview(getCurrentCotizacion());
 	});
 
-	downloadCotization?.addEventListener('click', () => {
-		const formData = Object.fromEntries(
-			new FormData(formCotization as HTMLFormElement),
-		);
-		console.log('Descargando cotización ', formData.nCotization);
+	downloadCotizacion?.addEventListener('click', () => {
+		const data = getCurrentCotizacion();
+		createCotizacionPdf(data).save(cotizacionFilename(data));
+	});
 
-		const docToDownload = new jsPDF();
-		// # # # # # # # #  PDF BASE # # # # # # # #
-		// Empezamos creando el pdf
-		docToDownload.setFontSize(32);
-		docToDownload.setFont('helvetica', 'bold');
-		docToDownload.text('Sonymat', 10, 20);
-		// Datos de Sonymat
-		docToDownload.setFontSize(12);
-		docToDownload.text('RUC:', 172, 15, { align: 'right' });
-		docToDownload.setFont('helvetica', 'normal');
-		docToDownload.text('10158643095', 200, 15, { align: 'right' });
-
-		docToDownload.setFont('helvetica', 'bold');
-		docToDownload.text('Cell:', 152, 20, { align: 'right' });
-		docToDownload.setFont('helvetica', 'normal');
-		docToDownload.text('933156539 | 998085837', 200, 20, { align: 'right' });
-
-		// Señores, Ruc, Contacto, Fecha, Dirección, Asunto
-		docToDownload.setFont('helvetica', 'bold');
-		docToDownload.text('Fecha', 10, 30);
-		docToDownload.text(': ', 32, 30);
-		docToDownload.setFont('helvetica', 'normal');
-		docToDownload.text(`${formData.dateCotization}`, 34, 30);
-
-		docToDownload.setFont('helvetica', 'bold');
-		docToDownload.text('Señores', 10, 35);
-		docToDownload.text(': ', 32, 35);
-		docToDownload.setFont('helvetica', 'normal');
-		docToDownload.text(`${formData.nameCompany}`, 34, 35);
-
-		docToDownload.setFont('helvetica', 'bold');
-		docToDownload.text('RUC', 10, 40);
-		docToDownload.text(': ', 32, 40);
-		docToDownload.setFont('helvetica', 'normal');
-		docToDownload.text(`${formData.rucCompany}`, 34, 40);
-
-		docToDownload.setFont('helvetica', 'bold');
-		docToDownload.text('Contacto', 10, 45);
-		docToDownload.text(': ', 32, 45);
-		docToDownload.setFont('helvetica', 'normal');
-		docToDownload.text(`${formData.nameClient}`, 34, 45);
-
-		docToDownload.setFont('helvetica', 'bold');
-		docToDownload.text('Dirección', 10, 50);
-		docToDownload.text(': ', 32, 50);
-		docToDownload.setFont('helvetica', 'normal');
-		docToDownload.text(`${formData.directionClient}`, 34, 50);
-
-		docToDownload.setFont('helvetica', 'bold');
-		docToDownload.text('Asunto', 10, 55);
-		docToDownload.text(': ', 32, 55);
-		docToDownload.setFont('helvetica', 'normal');
-		docToDownload.text(`${formData.asunto}`, 34, 55);
-
-		// Texto de presentación
-		docToDownload.setFont('helvetica', 'normal');
-		docToDownload.text('De nuestra consideración', 10, 70);
-		docToDownload.text(
-			'En atención a su amable solicitud, tenemos el agrado de presentarle nuestra propuesta\ntécnico - económica de lo siguiente:',
-			10,
-			75,
-		);
-
-		// Tabla de productos
-		// docToDownload.setLineDashPattern(); // Regresa a la línea sólida por defecto, pero no me gusta como marca el IDE el error
-		docToDownload.setLineWidth(0.5);
-		docToDownload.setFont('helvetica', 'bold');
-		// Celdas headers
-		docToDownload.cell(10, 85, 16, 10, 'Item', 1, 'center');
-		docToDownload.cell(26, 85, 18, 10, 'Cant.', 1, 'center');
-		docToDownload.cell(
-			50,
-			85,
-			108,
-			10,
-			'Descripción del producto o servicio',
-			1,
-			'center',
-		);
-		docToDownload.cell(130, 85, 30, 10, 'Precio (c/u)', 1, 'center');
-		docToDownload.cell(162, 85, 22, 10, 'Total', 1, 'center');
-
-		// Celdas de prueba
-		docToDownload.setFont('helvetica', 'normal');
-		// Celda 1
-		docToDownload.cell(10, 10, 16, 20, '1', 2, 'center'); // Item 1
-		docToDownload.cell(
-			26,
-			85,
-			18,
-			20,
-			`${formData.itemAmount1 ? formData.itemAmount1 : '0'}`,
-			2,
-			'center',
-		); // Cantidad 1
-		docToDownload.cell(
-			50,
-			85,
-			108,
-			20,
-			`${formData.itemDescription1 ? formData.itemDescription1 : '-'}`,
-			2,
-			'center',
-		); // Descripción 1
-		docToDownload.cell(
-			130,
-			85,
-			30,
-			20,
-			`${formData.itemPrice1} S/.`,
-			2,
-			'center',
-		); // Precio unitario 1
-		docToDownload.cell(
-			162,
-			85,
-			22,
-			20,
-			`${parseFloat(formData.itemAmount1 ? (formData.itemAmount1 as string) : '0') * parseFloat(formData.itemPrice1 ? (formData.itemPrice1 as string) : '0')} S/.`,
-			2,
-			'center',
-		); // Total 1
-		// Celda 2
-		docToDownload.cell(10, 85, 16, 20, '2', 3, 'center'); // Item 2
-		docToDownload.cell(
-			26,
-			85,
-			18,
-			20,
-			`${formData.itemAmount2 ? formData.itemAmount2 : '0'}`,
-			3,
-			'center',
-		); // Cantidad 2
-		docToDownload.cell(
-			52,
-			85,
-			108,
-			20,
-			`${formData.itemDescription2 ? formData.itemDescription2 : '-'}`,
-			3,
-			'center',
-		); // Descripción 2
-		docToDownload.cell(
-			132,
-			85,
-			30,
-			20,
-			`${formData.itemPrice2} S/.`,
-			3,
-			'center',
-		); // Precio unitario 2
-		docToDownload.cell(
-			164,
-			85,
-			22,
-			20,
-			`${parseFloat(formData.itemAmount2 ? (formData.itemAmount2 as string) : '0') * parseFloat(formData.itemPrice2 ? (formData.itemPrice2 as string) : '0')} S/.`,
-			3,
-			'center',
-		); // Total 2
-		// Celda 3
-		docToDownload.cell(10, 85, 16, 20, '3', 5, 'center'); // Item 3
-		docToDownload.cell(
-			26,
-			85,
-			18,
-			20,
-			`${formData.itemAmount3 ? formData.itemAmount3 : '0'}`,
-			5,
-			'center',
-		); // Cantidad 3
-		docToDownload.cell(
-			52,
-			85,
-			108,
-			20,
-			`${formData.itemDescription3 ? formData.itemDescription3 : '-'}`,
-			5,
-			'center',
-		); // Descripción 3
-		docToDownload.cell(
-			132,
-			85,
-			30,
-			20,
-			`${formData.itemPrice3} S/.`,
-			5,
-			'center',
-		); // Precio unitario 3
-		docToDownload.cell(
-			164,
-			85,
-			22,
-			20,
-			`${parseFloat(formData.itemAmount3 ? (formData.itemAmount3 as string) : '0') * parseFloat(formData.itemPrice3 ? (formData.itemPrice3 as string) : '0')} S/.`,
-			5,
-			'center',
-		); // Total 3
-		// Celda 4
-		docToDownload.cell(10, 85, 16, 20, '4', 6, 'center'); // Item 4
-		docToDownload.cell(
-			26,
-			85,
-			18,
-			20,
-			`${formData.itemAmount4 ? formData.itemAmount4 : '0'}`,
-			6,
-			'center',
-		); // Cantidad 4
-		docToDownload.cell(
-			52,
-			85,
-			108,
-			20,
-			`${formData.itemDescription4 ? formData.itemDescription4 : '-'}`,
-			6,
-			'center',
-		); // Descripción 4
-		docToDownload.cell(
-			132,
-			85,
-			30,
-			20,
-			`${formData.itemPrice4} S/.`,
-			6,
-			'center',
-		); // Precio unitario 4
-		docToDownload.cell(
-			164,
-			85,
-			22,
-			20,
-			`${parseFloat(formData.itemAmount4 ? (formData.itemAmount4 as string) : '0') * parseFloat(formData.itemPrice4 ? (formData.itemPrice4 as string) : '0')} S/.`,
-			6,
-			'center',
-		); // Total 4
-		// Celda 5
-		docToDownload.cell(10, 85, 16, 20, '5', 7, 'center'); // Item 5
-		docToDownload.cell(
-			26,
-			85,
-			18,
-			20,
-			`${formData.itemAmount5 ? formData.itemAmount5 : '0'}`,
-			7,
-			'center',
-		); // Cantidad 5
-		docToDownload.cell(
-			52,
-			85,
-			108,
-			20,
-			`${formData.itemDescription5 ? formData.itemDescription5 : '-'}`,
-			7,
-			'center',
-		); // Descripción 5
-		docToDownload.cell(
-			132,
-			85,
-			30,
-			20,
-			`${formData.itemPrice5} S/.`,
-			7,
-			'center',
-		); // Precio unitario 5
-		docToDownload.cell(
-			164,
-			85,
-			22,
-			20,
-			`${parseFloat(formData.itemAmount4 ? (formData.itemAmount5 as string) : '0') * parseFloat(formData.itemPrice4 ? (formData.itemPrice5 as string) : '0')} S/.`,
-			7,
-			'center',
-		); // Total 5
-
-		// Sub Total
-		docToDownload.setFont('helvetica', 'bold');
-		docToDownload.cell(142, 205, 32, 8, 'Sub Total:', 1, 'center');
-		docToDownload.setFont('helvetica', 'normal');
-		docToDownload.cell(
-			164,
-			205,
-			30,
-			8,
-			`${formData.subtotal} S/.`,
-			1,
-			'center',
-		);
-		// IGV
-		docToDownload.setFont('helvetica', 'bold');
-		docToDownload.cell(142, 215, 32, 8, 'IGV:', 2, 'right');
-		docToDownload.setFont('helvetica', 'normal');
-		docToDownload.cell(164, 215, 30, 8, `${formData.igv} S/.`, 2, 'right');
-		// Total
-		docToDownload.setFont('helvetica', 'bold');
-		docToDownload.cell(142, 225, 32, 8, 'Total:', 3, 'left');
-		docToDownload.setFont('helvetica', 'normal');
-		docToDownload.cell(164, 225, 30, 8, `${formData.total} S/.`, 3, 'left');
-
-		// Observaciones
-		docToDownload.setFont('helvetica', 'bold');
-		docToDownload.text('Condiciones de la oferta:', 10, 230);
-		docToDownload.setFont('helvetica', 'normal');
-		docToDownload.text(
-			`1. Los precios son en moneda nacional y no incluyen IGV.\n2. La validez de la oferta es de 30 días calendario.\n3. La forma de pago es 50 % de adelanto y 50 % antes de la entrega.\n4. La entrega de los productos es de 15 días calendario de emitida la orden de compra.`,
-			10,
-			235,
-		);
-
-		// Línea de separación
-		// Al final para que no afecte a la tabla
-		docToDownload.setLineWidth(0.1);
-		docToDownload.setDrawColor(0, 0, 0);
-		docToDownload.setLineDashPattern([2.5], 1);
-		docToDownload.line(10, 65, 200, 65);
-
-		// # # # # # # # #  PDF BASE # # # # # # # #
-
-		docToDownload.save(`cotizacion#${formData.nCotization}.pdf`);
+	window.addEventListener('beforeunload', () => {
+		if (currentPreviewUrl) {
+			URL.revokeObjectURL(currentPreviewUrl);
+		}
 	});
 </script>
 
 <style>
 	main {
-		margin: auto;
-		padding: 1rem;
-		width: 800px;
-		max-width: calc(100% - 2rem);
-		color: white;
+		color: var(--color-text);
 		font-size: 20px;
 		line-height: 1.6;
+		margin: auto;
+		max-width: calc(100% - 2rem);
+		padding: 2rem 1rem 3rem;
+		width: 900px;
 	}
 
-	h1 {
-		color: #fafafa;
-		font-size: 4rem;
+	h1,
+	h2 {
+		color: var(--color-text);
 		font-weight: 700;
 		line-height: 1;
 		text-align: center;
+	}
+
+	h1 {
+		font-size: 4rem;
 		margin-bottom: 1em;
 	}
 
 	h2 {
-		color: #fafafa;
 		font-size: 2rem;
-		font-weight: 700;
-		line-height: 1;
-		text-align: center;
 		margin-bottom: 1em;
 	}
 
-	.form-inputData {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		gap: 1rem;
-	}
-
-	form > button {
-		display: block;
-		font-size: 1.25rem;
-		cursor: pointer;
-		margin: 16px auto;
+	.preview-section {
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-soft);
+		margin-top: 3rem;
+		padding: 1.25rem;
 	}
 
 	embed {
-		width: 80%;
-		height: 640px;
+		background: #f8fafc;
+		border: 1px solid var(--color-border-strong);
+		border-radius: var(--radius-md);
 		display: block;
+		height: 640px;
 		margin: 0 auto;
-		padding-bottom: 32px;
+		width: min(100%, 820px);
 	}
 
-	#downloadCotization {
-		background-color: aquamarine;
-		font-size: larger;
+	#downloadCotizacion {
 		display: block;
+		font-size: larger;
 		margin: 32px auto;
-		padding: 16px;
-		color: black;
-		font-weight: 700;
+	}
+
+	.form-section,
+	.preview-section {
+		min-width: 0;
+	}
+
+	@media (min-width: 1080px) {
+		main {
+			align-items: start;
+			display: grid;
+			gap: 1.5rem;
+			grid-template-columns: minmax(380px, 0.78fr) minmax(620px, 1.22fr);
+			max-width: calc(100% - 2rem);
+			width: 1560px;
+		}
+
+		h1 {
+			grid-column: 1 / -1;
+			margin-bottom: 0.25em;
+		}
+
+		.preview-section {
+			margin-top: 0;
+			position: sticky;
+			top: 1rem;
+		}
+
+		.preview-section h2 {
+			font-size: 1.6rem;
+			margin-bottom: 0.75rem;
+		}
+
+		embed {
+			height: calc(100vh - 180px);
+			min-height: 680px;
+			width: 100%;
+		}
+
+		#downloadCotizacion {
+			margin: 1rem auto 0;
+		}
+	}
+
+	@media (min-width: 1440px) {
+		main {
+			grid-template-columns: minmax(440px, 0.7fr) minmax(760px, 1.3fr);
+			width: 1720px;
+		}
+
+		embed {
+			min-height: 760px;
+		}
+	}
+
+	@media (max-width: 720px) {
+		h1 {
+			font-size: 3rem;
+		}
+
+		embed {
+			height: 520px;
+		}
 	}
 </style>
