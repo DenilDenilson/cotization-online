@@ -6,7 +6,10 @@ import Layout from '../layouts/Layout.astro';
 <Layout title="Cotización Sonymat">
 	<main>
 		<h1>Cotizaciones Sonymat</h1>
-		<CotizacionForm />
+
+		<section class="form-section" aria-label="Datos de la cotización">
+			<CotizacionForm />
+		</section>
 
 		<section class="preview-section" aria-labelledby="previewTitle">
 			<h2 id="previewTitle">Mira tu cotización</h2>
@@ -127,6 +130,59 @@ import Layout from '../layouts/Layout.astro';
 		display: block;
 		font-size: larger;
 		margin: 32px auto;
+	}
+
+	.form-section,
+	.preview-section {
+		min-width: 0;
+	}
+
+	@media (min-width: 1080px) {
+		main {
+			align-items: start;
+			display: grid;
+			gap: 1.5rem;
+			grid-template-columns: minmax(380px, 0.78fr) minmax(620px, 1.22fr);
+			max-width: calc(100% - 2rem);
+			width: 1560px;
+		}
+
+		h1 {
+			grid-column: 1 / -1;
+			margin-bottom: 0.25em;
+		}
+
+		.preview-section {
+			margin-top: 0;
+			position: sticky;
+			top: 1rem;
+		}
+
+		.preview-section h2 {
+			font-size: 1.6rem;
+			margin-bottom: 0.75rem;
+		}
+
+		embed {
+			height: calc(100vh - 180px);
+			min-height: 680px;
+			width: 100%;
+		}
+
+		#downloadCotizacion {
+			margin: 1rem auto 0;
+		}
+	}
+
+	@media (min-width: 1440px) {
+		main {
+			grid-template-columns: minmax(440px, 0.7fr) minmax(760px, 1.3fr);
+			width: 1720px;
+		}
+
+		embed {
+			min-height: 760px;
+		}
 	}
 
 	@media (max-width: 720px) {
