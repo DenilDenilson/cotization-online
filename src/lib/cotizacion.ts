@@ -1,10 +1,3 @@
-export const ITEM_COUNT = 5;
-
-export const COTIZACION_ITEM_INDEXES = Array.from(
-	{ length: ITEM_COUNT },
-	(_, index) => index + 1,
-);
-
 export type CotizacionItem = {
 	index: number;
 	description: string;
@@ -31,6 +24,11 @@ const getStringField = (formData: FormData, name: string) => {
 	const value = formData.get(name);
 	return typeof value === 'string' ? value.trim() : '';
 };
+
+const getStringFields = (formData: FormData, name: string) =>
+	formData
+		.getAll(name)
+		.map((value) => (typeof value === 'string' ? value.trim() : ''));
 
 const hasFieldValue = (formData: FormData, name: string) =>
 	getStringField(formData, name) !== '';
@@ -62,32 +60,42 @@ export const createEmptyCotizacion = (): CotizacionData => ({
 	clientContact: '',
 	clientAddress: '',
 	subject: '',
-	items: COTIZACION_ITEM_INDEXES.map((index) => ({
-		index,
-		description: '',
-		amount: 0,
-		price: 0,
-		total: 0,
-	})),
+	items: [
+		{
+			index: 1,
+			description: '',
+			amount: 0,
+			price: 0,
+			total: 0,
+		},
+	],
 	subtotal: 0,
 	igv: 0,
 	total: 0,
 });
 
-export const cotizacionFromFormData = (formData: FormData): CotizacionData => {
-	const items = COTIZACION_ITEM_INDEXES.map((index) => {
-		const amount = getNumberField(formData, `itemAmount${index}`);
-		const price = getNumberField(formData, `itemPrice${index}`);
+const cotizacionItemsFromFormData = (formData: FormData) => {
+	const descriptions = getStringFields(formData, 'itemDescription');
+	const amounts = getStringFields(formData, 'itemAmount');
+	const prices = getStringFields(formData, 'itemPrice');
+	const itemCount = Math.max(descriptions.length, amounts.length, prices.length, 1);
+
+	return Array.from({ length: itemCount }, (_, index) => {
+		const amount = parseNumberField(amounts[index] ?? '');
+		const price = parseNumberField(prices[index] ?? '');
 
 		return {
-			index,
-			description: getStringField(formData, `itemDescription${index}`),
+			index: index + 1,
+			description: descriptions[index] ?? '',
 			amount,
 			price,
 			total: amount * price,
 		};
 	});
+};
 
+export const cotizacionFromFormData = (formData: FormData): CotizacionData => {
+	const items = cotizacionItemsFromFormData(formData);
 	const calculatedSubtotal = items.reduce((sum, item) => sum + item.total, 0);
 	const subtotal = hasFieldValue(formData, 'subtotal')
 		? getNumberField(formData, 'subtotal')

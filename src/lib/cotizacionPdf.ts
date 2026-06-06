@@ -1,6 +1,5 @@
 import { jsPDF } from 'jspdf';
 import {
-	COTIZACION_ITEM_INDEXES,
 	displayText,
 	formatMoney,
 	type CotizacionData,
@@ -36,6 +35,15 @@ const TABLE = {
 		{ label: 'Precio (c/u)', x: 130, width: 32, align: 'right' as const },
 		{ label: 'Total', x: 162, width: 32, align: 'right' as const },
 	],
+};
+
+const PAGE = {
+	bottomY: 282,
+	continuationTitleY: 12,
+	continuationTableY: 20,
+	totalsGap: 8,
+	totalsHeight: 28,
+	conditionsHeight: 40,
 };
 
 const setFont = (
@@ -138,43 +146,77 @@ const normalizeItem = (index: number, item?: CotizacionItem): CotizacionItem => 
 	total: item?.total ?? 0,
 });
 
-const drawItemsTable = (doc: PdfDocument, data: CotizacionData) => {
+const drawTableHeader = (doc: PdfDocument, y: number) => {
 	doc.setLineWidth(0.5);
 
 	for (const column of TABLE.columns) {
 		drawCell(
 			doc,
 			column.x,
-			TABLE.y,
+			y,
 			column.width,
 			TABLE.headerHeight,
 			column.label,
 			{ align: column.align, fontSize: 8, style: 'bold' },
 		);
 	}
-
-	for (const index of COTIZACION_ITEM_INDEXES) {
-		const item = normalizeItem(index, data.items[index - 1]);
-		const y = TABLE.y + TABLE.headerHeight + (index - 1) * TABLE.rowHeight;
-
-		drawCell(doc, 10, y, 16, TABLE.rowHeight, String(index));
-		drawCell(doc, 26, y, 18, TABLE.rowHeight, String(item.amount));
-		drawCell(doc, 44, y, 86, TABLE.rowHeight, displayText(item.description), {
-			align: 'left',
-		});
-		drawCell(doc, 130, y, 32, TABLE.rowHeight, formatMoney(item.price), {
-			align: 'right',
-		});
-		drawCell(doc, 162, y, 32, TABLE.rowHeight, formatMoney(item.total), {
-			align: 'right',
-		});
-	}
 };
 
-const drawTotals = (doc: PdfDocument, data: CotizacionData) => {
+const drawItemRow = (doc: PdfDocument, item: CotizacionItem, y: number) => {
+	drawCell(doc, 10, y, 16, TABLE.rowHeight, String(item.index));
+	drawCell(doc, 26, y, 18, TABLE.rowHeight, String(item.amount));
+	drawCell(doc, 44, y, 86, TABLE.rowHeight, displayText(item.description), {
+		align: 'left',
+	});
+	drawCell(doc, 130, y, 32, TABLE.rowHeight, formatMoney(item.price), {
+		align: 'right',
+	});
+	drawCell(doc, 162, y, 32, TABLE.rowHeight, formatMoney(item.total), {
+		align: 'right',
+	});
+};
+
+const addContinuationPage = (doc: PdfDocument) => {
+	doc.addPage();
+	setFont(doc, 10, 'bold');
+	doc.text('Cotización - continuación', 10, PAGE.continuationTitleY);
+	drawTableHeader(doc, PAGE.continuationTableY);
+	return PAGE.continuationTableY + TABLE.headerHeight;
+};
+
+const drawItemsTable = (doc: PdfDocument, data: CotizacionData) => {
+	const items =
+		data.items.length > 0 ? data.items : [normalizeItem(1, undefined)];
+	let y = TABLE.y;
+
+	drawTableHeader(doc, y);
+	y += TABLE.headerHeight;
+
+	for (const item of items) {
+		if (y + TABLE.rowHeight > PAGE.bottomY) {
+			y = addContinuationPage(doc);
+		}
+
+		drawItemRow(doc, item, y);
+		y += TABLE.rowHeight;
+	}
+
+	return y;
+};
+
+const drawTotals = (
+	doc: PdfDocument,
+	data: CotizacionData,
+	startY: number,
+) => {
 	const x = 130;
 	const valueX = 162;
-	const y = TABLE.y + TABLE.headerHeight + TABLE.rowHeight * COTIZACION_ITEM_INDEXES.length + 10;
+	let y = startY + PAGE.totalsGap;
+
+	if (y + PAGE.totalsHeight > PAGE.bottomY) {
+		doc.addPage();
+		y = PAGE.continuationTableY;
+	}
 
 	drawCell(doc, x, y, 32, 8, 'Sub Total:', {
 		align: 'right',
@@ -205,13 +247,22 @@ const drawTotals = (doc: PdfDocument, data: CotizacionData) => {
 		align: 'right',
 		fontSize: 10,
 	});
+
+	return y + PAGE.totalsHeight;
 };
 
-const drawConditions = (doc: PdfDocument) => {
+const drawConditions = (doc: PdfDocument, startY: number) => {
+	let y = startY + 10;
+
+	if (y + PAGE.conditionsHeight > PAGE.bottomY) {
+		doc.addPage();
+		y = PAGE.continuationTableY;
+	}
+
 	setFont(doc, 12, 'bold');
-	doc.text('Condiciones de la oferta:', 10, 245);
+	doc.text('Condiciones de la oferta:', 10, y);
 	setFont(doc, 12);
-	doc.text(CONDITIONS.join('\n'), 10, 250);
+	doc.text(CONDITIONS.join('\n'), 10, y + 5);
 };
 
 export const createCotizacionPdf = (data: CotizacionData) => {
@@ -219,9 +270,9 @@ export const createCotizacionPdf = (data: CotizacionData) => {
 
 	drawHeader(doc, data);
 	drawIntro(doc);
-	drawItemsTable(doc, data);
-	drawTotals(doc, data);
-	drawConditions(doc);
+	const endOfTableY = drawItemsTable(doc, data);
+	const endOfTotalsY = drawTotals(doc, data, endOfTableY);
+	drawConditions(doc, endOfTotalsY);
 
 	return doc;
 };

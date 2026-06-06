@@ -7,7 +7,7 @@ El proyecto está construido con Astro y usa jsPDF en el navegador para crear un
 ## Funcionalidades
 
 - Formulario para registrar datos generales de la cotización: número, fecha, empresa, RUC, contacto, dirección y asunto.
-- Registro de hasta 5 productos o servicios con descripción, cantidad y precio unitario.
+- Registro dinámico de productos o servicios con descripción, cantidad y precio unitario.
 - Vista previa del PDF dentro de la página mediante un `embed`.
 - Generación de PDF con datos de Sonymat, tabla de ítems, subtotales, IGV, total y condiciones de la oferta.
 - Cálculo de total por ítem a partir de cantidad y precio unitario.
