@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro"
@@ -14,5 +16,8 @@
     "astro": "^4.9.2",
     "jspdf": "^2.5.1",
     "typescript": "^5.4.5"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.8"
   }
 }

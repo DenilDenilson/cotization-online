@@ -21,6 +21,7 @@ El proyecto está construido con Astro y usa jsPDF en el navegador para crear un
 - Astro 4
 - TypeScript
 - jsPDF
+- Vitest
 - CSS propio con tema oscuro fijo
 - npm con `package-lock.json`
 
@@ -59,6 +60,8 @@ npm start
 | --- | --- |
 | `npm run dev` | Inicia el servidor de desarrollo de Astro. |
 | `npm start` | Alias de `npm run dev`. |
+| `npm test` | Ejecuta los tests automáticos con Vitest. |
+| `npm run test:watch` | Ejecuta Vitest en modo observación. |
 | `npm run build` | Ejecuta `astro check` y genera el build de producción. |
 | `npm run preview` | Sirve localmente el build generado. |
 | `npm run astro` | Permite ejecutar comandos del CLI de Astro. |
@@ -73,7 +76,9 @@ npm start
 │   ├── components/
 │   │   └── CotizacionForm.astro
 │   ├── lib/
+│   │   ├── cotizacion.test.ts
 │   │   ├── cotizacion.ts
+│   │   ├── cotizacionPdf.test.ts
 │   │   └── cotizacionPdf.ts
 │   ├── layouts/
 │   │   └── Layout.astro
@@ -91,6 +96,7 @@ npm start
 - `src/components/CotizacionForm.astro`: contiene el formulario de datos generales, ítems y totales.
 - `src/lib/cotizacion.ts`: normaliza los datos del formulario y define tipos/helpers de cotización.
 - `src/lib/cotizacionPdf.ts`: genera el PDF con jsPDF.
+- `src/lib/*.test.ts`: cubre cálculos, parseo de datos dinámicos y generación básica del PDF.
 - `src/layouts/Layout.astro`: define la estructura HTML base, metadatos, favicon y estilos globales.
 - `astro.config.mjs`: configuración base de Astro.
 
